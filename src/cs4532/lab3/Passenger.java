@@ -27,6 +27,11 @@ public class Passenger extends Thread implements Observer {
 //        System.out.println("Inside thread: "+ getName());
 //        while (true) {
 //            while (currentBus == null) ;
+        try {
+            Thread.sleep((int)(Math.random()*1000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         
         boolean boarded = currentBus.boardBus(this);
         if (boarded) {

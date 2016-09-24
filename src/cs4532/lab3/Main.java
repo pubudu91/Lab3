@@ -15,7 +15,7 @@ public class Main {
 
     public static void addPassengers(BusStop busStop) {
         Passenger p;
-        for (int i = 0; i < 55; i++) {
+        for (int i = 0; i < 70 ; i++) {
             busStop.addObserver((p = new Passenger(i)));
             p.start();
             try {
