@@ -14,8 +14,8 @@ public class main {
         int numberOfBusesTotal = 10;
         int numberOfRidersTotal = 500;
         int delayBus = 10000;
-        int delayBusMean=20 * 60; // mean in seconds
-        int delayRiderMean=3; // mean in seconds
+        int delayBusMean = 30; // mean in seconds
+        int delayRiderMean = 3; // mean in seconds
         int delayRiders = 3000;
 
         Timer bus_timer = new Timer();
@@ -24,14 +24,14 @@ public class main {
         Semaphore multipleLock = new Semaphore(numberOfPassegers);
         Semaphore mutex = new Semaphore(1);
         Semaphore bus = new Semaphore(0);
-        Semaphore allAboard = new Semaphore(0);
+        Semaphore boardPassengers = new Semaphore(0);
 
         class Rider_task extends TimerTask {
 
             @Override
             public void run() {
                 Thread t = null;
-                t = new Thread(new Rider(multipleLock, mutex, bus, allAboard), "Rider_" + scheduledExecutionTime());
+                t = new Thread(new Rider(multipleLock, mutex, bus, boardPassengers), "Rider_" + scheduledExecutionTime());
                 System.out.println("Rider Arrived");
                 t.start();
             }
@@ -42,7 +42,7 @@ public class main {
             @Override
             public void run() {
                 Thread t = null;
-                t = new Thread(new Bus(mutex, bus, allAboard), "Bus");
+                t = new Thread(new Bus(mutex, bus, boardPassengers), "Bus");
                 System.out.println("Bus Arrived");
                 t.start();
             }
@@ -70,24 +70,19 @@ public class main {
 
 
 class Rider implements Runnable {
-    Semaphore multipleLock, mutex, bus, allAboard;
+    Semaphore multipleLock, mutex, bus, boardPassengers;
 
-    public Rider(Semaphore multipleLock, Semaphore mutex, Semaphore bus, Semaphore allAboard) {
+    public Rider(Semaphore multipleLock, Semaphore mutex, Semaphore bus, Semaphore boardPassengers) {
         this.multipleLock = multipleLock;
         this.mutex = mutex;
         this.bus = bus;
-        this.allAboard = allAboard;
+        this.boardPassengers = boardPassengers;
     }
 
 
     @Override
     public void run() {
 
-        try {
-            multipleLock.acquire();
-        } catch (InterruptedException e) {
-            multipleLock.release();
-        }
 
         try {
             mutex.acquire();
@@ -107,8 +102,9 @@ class Rider implements Runnable {
         System.out.println("boarding");
 
         BusStop.riders--;
-        if (BusStop.riders == 0) {
-            allAboard.release();
+        BusStop.boardedCount++;
+        if (BusStop.riders == 0 || BusStop.boardedCount == 50) {
+            boardPassengers.release();
         } else {
             bus.release();
         }
@@ -117,13 +113,13 @@ class Rider implements Runnable {
 
 class Bus implements Runnable {
 
-    Semaphore mutex, bus, allAboard;
+    Semaphore mutex, bus, boardPassengers;
 
-    public Bus(Semaphore mutex, Semaphore bus, Semaphore allAboard) {
+    public Bus(Semaphore mutex, Semaphore bus, Semaphore boardPassengers) {
 
         this.mutex = mutex;
         this.bus = bus;
-        this.allAboard = allAboard;
+        this.boardPassengers = boardPassengers;
 
     }
 
@@ -138,17 +134,19 @@ class Bus implements Runnable {
 
             bus.release();
             try {
-                allAboard.acquire();
+                boardPassengers.acquire();
             } catch (InterruptedException e) {
-                allAboard.release();
+                boardPassengers.release();
             }
         }
 
         mutex.release();
+        BusStop.boardedCount = 0;
         System.out.println("Depart");
     }
 }
 
 class BusStop {
     public static int riders = 0;
+    public static int boardedCount = 0;
 }
