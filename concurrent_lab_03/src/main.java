@@ -14,6 +14,8 @@ public class main {
         int numberOfBusesTotal = 10;
         int numberOfRidersTotal = 500;
         int delayBus = 10000;
+        int delayBusMean=20 * 60; // mean in seconds
+        int delayRiderMean=3; // mean in seconds
         int delayRiders = 3000;
 
         Timer bus_timer = new Timer();
@@ -48,12 +50,12 @@ public class main {
 
         for (int i = 0; i < numberOfBusesTotal; i++) {
             bus_timer.schedule(new Bus_task(), delayBus);
-            delayBus += Math.abs(getRandomInterTimeInterval(5 * 1000));
+            delayBus += Math.abs(getRandomInterTimeInterval(delayBusMean * 1000));
         }
 
         for (int i = 0; i < numberOfRidersTotal; i++) {
             rider_timer.schedule(new Rider_task(), delayRiders);
-            delayRiders += Math.abs(getRandomInterTimeInterval(30 * 1000));
+            delayRiders += Math.abs(getRandomInterTimeInterval(delayRiderMean * 1000));
         }
 
 
