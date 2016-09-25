@@ -21,7 +21,7 @@ public class main {
         Timer bus_timer = new Timer();
         Timer rider_timer = new Timer();
 
-        Semaphore multipleLock = new Semaphore(numberOfPassegers);
+        Semaphore multipleLock = new Semaphore(1);
         Semaphore mutex = new Semaphore(1);
         Semaphore bus = new Semaphore(0);
         Semaphore boardPassengers = new Semaphore(0);
@@ -83,15 +83,28 @@ class Rider implements Runnable {
     @Override
     public void run() {
 
-
-        try {
-            mutex.acquire();
-        } catch (InterruptedException e) {
-            mutex.release();
+//        try {
+//            mutex.acquire();
+//        } catch (InterruptedException e) {
+//            mutex.release();
+//        }
+        if (mutex.availablePermits() < 1) {
+            try {
+                mutex.acquire();
+            } catch (InterruptedException e) {
+                mutex.release();
+            }
         }
 
+
+        try {
+            multipleLock.acquire();
+        } catch (InterruptedException e) {
+            multipleLock.release();
+        }
         BusStop.riders++;
-        mutex.release();
+        multipleLock.release();
+
 
         try {
             bus.acquire();
