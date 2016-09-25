@@ -2,6 +2,8 @@
  * Created by yellowflash on 9/23/16.
  */
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 
 
@@ -9,22 +11,51 @@ public class main {
 
     public static void main(String[] args) {
         int numberOfPassegers = 50;
+        int numberOfBusesTotal = 10;
+        int numberOfRidersTotal = 500;
+        int delayBus = 10000;
+        int delayRiders = 3000;
+
+        Timer bus_timer = new Timer();
+        Timer rider_timer = new Timer();
+
         Semaphore multipleLock = new Semaphore(numberOfPassegers);
         Semaphore mutex = new Semaphore(1);
         Semaphore bus = new Semaphore(0);
         Semaphore allAboard = new Semaphore(0);
 
-        Thread t = null;
-        for (int i = 0; i < numberOfPassegers; i++) {
-            t = new Thread(new Rider(multipleLock, mutex, bus, allAboard), "Rider_" + i);
-            t.start();
-            System.out.println("rider created");
+        class Rider_task extends TimerTask {
+
+            @Override
+            public void run() {
+                Thread t = null;
+                t = new Thread(new Rider(multipleLock, mutex, bus, allAboard), "Rider_" + scheduledExecutionTime());
+                System.out.println("Rider Arrived");
+                t.start();
+            }
         }
 
+        class Bus_task extends TimerTask {
 
-        t = new Thread(new Bus(mutex, bus, allAboard), "Bus");
-        t.start();
-        System.out.println("bus created");
+            @Override
+            public void run() {
+                Thread t = null;
+                t = new Thread(new Bus(mutex, bus, allAboard), "Bus");
+                System.out.println("Bus Arrived");
+                t.start();
+            }
+        }
+
+        for (int i = 0; i < numberOfBusesTotal; i++) {
+            bus_timer.schedule(new Bus_task(), delayBus);
+            delayBus += Math.abs(getRandomInterTimeInterval(5 * 1000));
+        }
+
+        for (int i = 0; i < numberOfRidersTotal; i++) {
+            rider_timer.schedule(new Rider_task(), delayRiders);
+            delayRiders += Math.abs(getRandomInterTimeInterval(30 * 1000));
+        }
+
 
     }
 
@@ -32,7 +63,6 @@ public class main {
         double random = Math.random();
         double val = (-1) * (meanTimeInterval) * (Math.log(random * meanTimeInterval));
         return (int) val;
-
     }
 }
 
